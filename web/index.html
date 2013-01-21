@@ -1,0 +1,55 @@
+<html>
+<head>
+  <title>Firebase Chat Example</title>
+  <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+  <script type="text/javascript" src="js/chosen.jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+  <link rel="stylesheet" type="text/css" href="css/chosen.css">
+</head>
+<body>
+MovieTalk!
+<div id='messagesDiv'></div>
+<input type='text' id='nameInput' placeholder='Name'>
+<select data-placeholder='Type a movie title...' multiple  id='messageInput'>
+<input type="button" value="Post" id="post_message"></input>
+</select>
+<script type='text/javascript'>
+  // Get a reference to the root of the chat data.
+  var chatRoot = new Firebase('https://racheval.firebaseio.com/rooms/movies');
+  
+  var stubbed_autocomplete=[]
+  // When the user presses enter on the message input, write the message to firebase.
+  $('#post_message').click(function () {
+      var name = $('#nameInput').val();
+      var movie_ids = $.map($("#messageInput option:selected"), function(a){return $(a).val()});
+      console.log({name:name, ids:movie_ids});
+      chatRoot.push({name:name, ids:movie_ids});
+      $('#messageInput option').attr('selected', false);
+      $("#messageInput").val('').trigger("liszt:updated");
+  });
+  // Add a callback that is triggered for each chat message.
+  chatRoot.on('child_added', function (snapshot) {
+    var message = snapshot.val();
+    $('<div/>').text(message.text).prepend($('<em/>').text(message.name+': ')).appendTo($('#messagesDiv'));
+    $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+  });
+</script>
+<script type="text/javascript">
+  (function () {
+    var moviesRoot = new Firebase('https://racheval.firebaseio.com/stores/movies');
+    moviesRoot.on('value', function(movies){
+      movies = movies.val()
+      var textIn = $("#messageInput");
+      for(id in movies){
+        var name = movies[id]['name'];
+        textIn.append("<option value=" + id + ">" +  name + "</option>"); 
+      }
+      $("#messageInput").chosen();
+    });
+  })();
+  
+</script>
+</body>
+
+</html>
